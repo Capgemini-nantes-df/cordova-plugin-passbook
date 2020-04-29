@@ -8,6 +8,7 @@ typedef void (^AddPassResultBlock)(PKPass *pass, BOOL added);
 
 @property (nonatomic, retain) PKPass *lastPass;
 @property (nonatomic, copy) AddPassResultBlock lastAddPassCallback;
+@property (nonatomic) BOOL passAlreadyAdded;
 
 - (BOOL)ensureAvailability:(CDVInvokedUrlCommand*)command;
 - (void)sendPassResult:(PKPass*)pass added:(BOOL)added command:(CDVInvokedUrlCommand*)command;
@@ -25,6 +26,7 @@ typedef void (^AddPassResultBlock)(PKPass *pass, BOOL added);
 
 @synthesize lastPass;
 @synthesize lastAddPassCallback;
+@synthesize passAlreadyAdded;
 
 - (BOOL)shouldOverrideLoadWithRequest:(NSURLRequest*)request navigationType:(UIWebViewNavigationType)navigationType
 {
@@ -192,6 +194,8 @@ typedef void (^AddPassResultBlock)(PKPass *pass, BOOL added);
         return;
     }
     
+    self.passAlreadyAdded = [[[PKPassLibrary alloc] init] containsPass:pass];
+    
     self.lastPass = pass;
     self.lastAddPassCallback = successBlock;
     
@@ -235,7 +239,7 @@ typedef void (^AddPassResultBlock)(PKPass *pass, BOOL added);
     [controller dismissViewControllerAnimated:YES completion:^{
         if (self.lastAddPassCallback && self.lastPass) {
             BOOL passAdded = [[[PKPassLibrary alloc] init] containsPass:self.lastPass];
-            self.lastAddPassCallback(self.lastPass, passAdded);
+            self.lastAddPassCallback(self.lastPass, passAdded && !self.passAlreadyAdded);
             self.lastAddPassCallback = nil;
             self.lastPass = nil;
         }
